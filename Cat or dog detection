@@ -1,0 +1,58 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing import image
+import numpy as np
+import os
+
+# Step 1: Prepare Image Data
+train_dir = "C:/Users/C3STREAMLAND/Downloads/data_set/train"
+val_dir = "C:/Users/C3STREAMLAND/Downloads/data_set/val"
+
+train_datagen = ImageDataGenerator(rescale=1./255)
+val_datagen = ImageDataGenerator(rescale=1./255)
+
+train_data = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=(100, 100),
+    batch_size=10,
+    class_mode='binary'
+)
+
+val_data = val_datagen.flow_from_directory(
+    val_dir,
+    target_size=(100, 100),
+    batch_size=10,
+    class_mode='binary'
+)
+
+# Step 2: Build Model
+model = Sequential([
+    Conv2D(16, (3, 3), activation='relu', input_shape=(100, 100, 3)),
+    MaxPooling2D(2, 2),
+    Flatten(),
+    Dense(32, activation='relu'),
+    Dense(1, activation='sigmoid')
+])
+
+# Step 3: Compile Model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Step 4: Train Model
+model.fit(train_data, epochs=5, validation_data=val_data)
+
+# Step 5: Predict New Image
+def predict_image(img_path):
+    img = image.load_img(img_path, target_size=(100, 100))
+    img_array = image.img_to_array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+
+    prediction = model.predict(img_array)
+    if prediction[0][0] > 0.5:
+        print("Predicted: Dog 🐶")
+    else:
+        print("Predicted: Cat 🐱")
+
+# Example usage
+predict_image("C:/Users/C3STREAMLAND/Downloads/data_set/cat_test/cat1.jpg")
